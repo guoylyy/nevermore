@@ -4,7 +4,7 @@ from app import app, mongo, db, mongoClientDB
 from flask import jsonify, request
 from bson.objectid import ObjectId
 from collections import OrderedDict
-
+from bson import json_util
 import json,copy,binascii,os
 
 class BaseResult:
@@ -73,17 +73,41 @@ def get_report():
   else:
     return jsonify(BaseResult("100","输入参数有误").to_dict())
 
+# 插入实验报告模板
+@app.route('/report/template/<int:experiment_id>', methods=['POST'])
+def add_template(experiment_id):
+  result = mongo.db.templates.find_one({"experiment_id":experiment_id})
+  form = json.loads(request.data, object_pairs_hook=OrderedDict)
+  if not result:
+    form['experiment_id'] = experiment_id
+  else:
+    form['_id'] = result['_id']
+  mongo.db.templates.save(form)
+  return json_util.dumps(form)
+
 # 获取实验报告模板
 @app.route('/report/template/<int:experiment_id>', methods=['GET'])
-def get_answer(experiment_id):
+def get_template(experiment_id):
   result = mongo.db.templates.find_one({"experiment_id":experiment_id})
   if not result:
     return jsonify(BaseResult("404","Not Found").to_dict())
   return jsonify(BaseResult("200",result["template"]).to_dict())
 
+# 插入答案
+@app.route('/report/answer/<int:experiment_id>', methods=['POST'])
+def add_answer(experiment_id):
+  result = mongo.db.answers.find_one({"experiment_id":experiment_id})
+  form = json.loads(request.data, object_pairs_hook=OrderedDict)
+  if not result:
+    form['experiment_id'] = experiment_id
+  else:
+    form['_id'] = result['_id']
+  mongo.db.answers.save(form)
+  return json_util.dumps(form)
+
 # 获取正确答案
 @app.route('/report/answer/<int:experiment_id>', methods=['GET'])
-def get_template(experiment_id):
+def get_answer(experiment_id):
   token = request.headers.get('token')
   result = mongo.db.tokens.find_one({"experiment_id":experiment_id,"token":token})
   if not result:
