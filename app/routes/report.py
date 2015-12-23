@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from collections import OrderedDict
 
 import json
+import copy
 
 class BaseResult:
   def __init__(self, code, data):
@@ -18,15 +19,17 @@ class BaseResult:
       )
 
 class Answer:
-  def __init__(self, answer_type, answer, answer_range):
+  def __init__(self, answer_type, answer, answer_range, score):
     self.answer_type = answer_type
     self.answer = answer
     self.answer_range = answer_range
+    self.score = score
   def to_dict(self):
     return dict(
         answer_type=self.answer_type,
         answer=self.answer,
-        answer_range = self.answer_range
+        answer_range = self.answer_range,
+        score = self.score
       )
 
 # 保存实验报告
@@ -35,83 +38,124 @@ def save_report():
 
   form = json.loads(request.data,object_pairs_hook=OrderedDict)
 
-  student_id = form["student_id"]
-  experiment_id = form["experiment_id"]
-  report = form["report"]
+  idsDict = copy.copy(form)
+  idsDict.pop("report")
 
-  query_report = mongo.db.reports.find_one({"student_id":student_id,"experiment_id":experiment_id})
+  form["status"] = "uncommitted"
+
+  query_report = mongo.db.reports.find_one(idsDict)
 
   if not query_report:
-    mongo.db.reports.insert({"student_id":student_id,"experiment_id":experiment_id,"report":report,"status":"uncommitted"})
+    mongo.db.reports.insert(form)
+    form.pop("_id")
   else:
-    mongo.db.reports.save({"_id":ObjectId(query_report["_id"]),"student_id":student_id,"experiment_id":experiment_id,"report":report,"status":"uncommitted"})
-  
-  return jsonify(BaseResult("200",report).to_dict())
+    formWithObjectId = copy.copy(form)
+    formWithObjectId["_id"] = ObjectId(query_report["_id"])
+    mongo.db.reports.save(formWithObjectId)
+
+  return jsonify(BaseResult("200",form).to_dict())
 
 # 获取实验报告
-@app.route('/report/<int:student_id>/<int:experiment_id>', methods=['GET'])
-def get_report(student_id,experiment_id):
-  
-  result = mongo.db.reports.find_one({"student_id":student_id,"experiment_id":experiment_id})
+@app.route('/report', methods=['GET'])
+def get_report():
+  query = request.args
 
-  if not result:
-    return jsonify(BaseResult("404","Not Found").to_dict())
-  return jsonify(BaseResult("200",{"report":result["report"],"status":result["status"]}).to_dict())
+  if query.has_key("student_id") and query.has_key("class_id") and query.has_key("experiment_id"):
+    query_dict = query_to_dict(query)
+    query_report = mongo.db.reports.find_one(query_dict)
+    query_report.pop("_id")
+
+    if not query_report:
+      return jsonify(BaseResult("404","Not Found").to_dict())
+    return jsonify(BaseResult("200",query_report).to_dict())
+
+  else:
+    return jsonify(BaseResult("100","输入参数有误").to_dict())
 
 # 获取实验报告模板
 @app.route('/report/template/<int:experiment_id>', methods=['GET'])
 def get_answer(experiment_id):
-
-  print experiment_id
-  
-  report = mongo.db.templates.find_one({"experiment_id":experiment_id})["template"]
-
-  return jsonify(BaseResult("200",report).to_dict())
+  result = mongo.db.templates.find_one({"experiment_id":experiment_id})
+  if not result:
+    return jsonify(BaseResult("404","Not Found").to_dict())
+  return jsonify(BaseResult("200",result["template"]).to_dict())
 
 # 获取正确答案
 @app.route('/report/answer/<int:experiment_id>', methods=['GET'])
 def get_template(experiment_id):
-
-  print experiment_id
-  
-  report = mongo.db.answers.find_one({"experiment_id":experiment_id})["report"]
-
-  return jsonify(BaseResult("200",report).to_dict())
+  result = mongo.db.answers.find_one({"experiment_id":experiment_id})
+  if not result:
+    return jsonify(BaseResult("404","Not Found").to_dict())
+  return jsonify(BaseResult("200",result["report"]).to_dict())
 
 # 提交实验报告并打分
 @app.route('/report/submit', methods=['POST'])
 def submit_report():
-  form = request.json
+  query = request.args
+  query_dict = query_to_dict(query)
 
-  student_id = form["student_id"]
-  experiment_id = form["experiment_id"]
-  
   #获得有序的report
-  student_report_with_id = mongoClientDB['reports'].find_one({"student_id":student_id,"experiment_id":experiment_id})
+  student_report_with_id = mongoClientDB['reports'].find_one(query_dict)
+  if not student_report_with_id:
+    return jsonify(BaseResult("404","Not Found").to_dict())
   student_report = student_report_with_id["report"]
-  answer_report = mongoClientDB['answers'].find_one({"experiment_id":experiment_id})["report"]
+
+  answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":query_dict["experiment_id"]})
+  if not answer_report_with_id:
+    return jsonify(BaseResult("404","Not Found").to_dict())
+  answer_report = answer_report_with_id["report"]
 
   graded_report = grade(student_report, answer_report)
 
-  mongo.db.reports.save({"_id":ObjectId(student_report_with_id["_id"]),"student_id":student_id,"experiment_id":experiment_id,"report":graded_report,"status":"committed"})
+  query_dict["report"] = graded_report
+  query_dict["status"] = "committed"
+  query_dict["_id"] = ObjectId(student_report_with_id["_id"])
+
+  mongo.db.reports.save(query_dict)
 
   return jsonify(BaseResult("200",graded_report).to_dict())
+
+#将query转为dict类型
+def query_to_dict(query):
+  query_dict = {}
+  query_dict["student_id"] = int(query["student_id"])
+  query_dict["class_id"] = int(query["class_id"])
+  query_dict["experiment_id"] = int(query["experiment_id"])
+  return query_dict
+
+#判断当前key是否为新的section
+def isNewSection(key):
+  if key[0].isdigit() and not(key[2].isdigit()):
+    return True
+  return False
 
 # 根据answer_report批改student_report
 def grade(student_report, answer_report):
   answers = []
   find_all_answers(answer_report, answers)
   answers.reverse()
-  grade_all_answers(student_report, answers)
+
+  section_score = [0]
+  total_score = [0]
+  section_scores = []
+  grade_all_answers(student_report, answers, section_score, section_scores, total_score)
+
+  student_report["section_scores"] = section_scores
+  student_report["total_score"] = total_score[0]
+
   return student_report
 
 # 根据顺序的answers批改student_report
-def grade_all_answers(node, answers):
+def grade_all_answers(node, answers, section_score, section_scores, total_score):
   if isinstance(node, dict) :
     for x in range(len(node)):
       temp_key = node.keys()[x]
       temp_value = node[temp_key]
       #print temp_key
+      if isNewSection(temp_key) or (len(answers) ==1 and temp_key == 'answer'):
+        section_scores.append(section_score[0])
+        total_score[0] += section_score[0]
+        section_score = [0]
       if temp_key == 'answer':
         answer = answers.pop()
         #print answer.answer
@@ -120,18 +164,19 @@ def grade_all_answers(node, answers):
           upper_bound = answer.answer + answer.answer_range
           #print lower_bound, upper_bound
           if lower_bound <= temp_value <= upper_bound:
-            node["score"] = 1
+            node["score"] = answer.score
           else:
             node["score"] = 0
         else:
           if temp_value == answer.answer:
-            node["score"] = 1
+            node["score"] = answer.score
           else:
             node["score"] = 0
-      grade_all_answers(temp_value, answers)
+        section_score[0] += node["score"]
+      grade_all_answers(temp_value, answers, section_score, section_scores, total_score)
   if isinstance(node, list) :
     for x in node:
-      grade_all_answers(x, answers)
+      grade_all_answers(x, answers, section_score, section_scores, total_score)
 
 # 将answer_report中的所有answer按顺序存入answers
 def find_all_answers(node, answers):
@@ -143,13 +188,14 @@ def find_all_answers(node, answers):
       if temp_key == 'answer':
         answer = temp_value
         answer_type = node['type']
+        score = node['score']
         if answer_type == 'fill-in-the-blank':
           answer_range = node['range']
-          #print answer_type, answer, answer_range
-          answers.append(Answer(answer_type, answer, answer_range))
+          #print answer_type, answer, answer_range, score
+          answers.append(Answer(answer_type, answer, answer_range,score))
         else:
-          #print answer_type, answer
-          answers.append(Answer(answer_type, answer, 0))
+          #print answer_type, answer, score
+          answers.append(Answer(answer_type, answer, 0, score))
       find_all_answers(temp_value, answers)
   if isinstance(node, list) :
     for x in node:

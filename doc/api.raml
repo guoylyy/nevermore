@@ -33,12 +33,13 @@ traits:
 
 /report:
   post:
-    description: 保存实验报告(相同student_id和experiment_id的报告会覆盖）
+    description: 保存实验报告(相同student_id、class_id和experiment_id的报告会覆盖）
     body:
       application/json:
         schema: |
           {
             "student_id"      :1434323,
+            "class_id"        :5,
             "experiment_id"   :1,
             "report"          :{
 
@@ -53,25 +54,30 @@ traits:
                 "code":"200",
                 "data":""
               }
-  /{student_id}/{experiment_id}:
-    get:
-      description: 获取实验报告（对于已经提交的报告返回的报告带评分）
-      body:
-        application/json:
-          schema: |
-            {}
-      responses:
-        200:
-          body:
-            application/json:
-              schema: |
-                {
-                  "code":"200",
-                  "data":{
-                    "report":{},
-                    "status":"uncommitted | committed"
-                  }
+  get:
+    description: 获取实验报告（对于已经提交的报告返回的报告带评分）
+    queryParameters:
+      student_id:
+        type: integer
+      class_id:
+        type: integer
+      experiment_id:
+        type: integer
+    body:
+      application/json:
+        schema: |
+          {}
+    responses:
+      200:
+        body:
+          application/json:
+            schema: |
+              {
+                "code":"200",
+                "data":{
                 }
+              }
+
   /template/{experiment_id}:
     get:
       description: 获取实验报告模板
@@ -117,14 +123,14 @@ traits:
                 }
   /submit:
     post:
-      description: 提交报告并打分（答对为1，答错为0）
-      body:
-        application/json:
-          schema: |
-            {
-              "student_id"      :1434323,
-              "experiment_id"   :1
-            }
+      description: 提交报告并打分
+      queryParameters:
+        student_id:
+          type: integer
+        class_id:
+          type: integer
+        experiment_id:
+          type: integer
       responses:
         200:
           body:
@@ -133,6 +139,8 @@ traits:
                 {
                   "code":"200",
                   "data":{
+                    "section_scores" : [0,0,0,2,1,10,8,6],
+                    "total_score" : 27,
                     "example1":{
                       "type":"fill-in-the-blank",
                       "answer":10,
