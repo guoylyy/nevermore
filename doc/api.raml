@@ -1,0 +1,148 @@
+#%RAML 0.8
+title: nevermore
+baseUri: http://baserurl:5000/
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+
+traits:
+  - secured:
+      headers:
+        X-Auth-Token:
+          description: 当前用户token，用于验证权限,从登录返回的header中获取
+          type: string
+          required: true
+          example: "IOC551fea47e4b02dd0ab568b85"
+
+  - loginSecured:
+      headers:
+        X-Username:
+          description: 用户名
+          type: string
+          required: true
+        X-Password:
+          description: 密码
+          type: string
+          required: true
+  - roleParam:
+      queryParameters:
+        userType:
+          type: string
+          description: 用户角色
+          example: |
+            ADMINISTRATOR, STUDENT, ALL_TEACHER, LAB_TEAHCER,
+
+/report:
+  post:
+    description: 保存实验报告(相同student_id和experiment_id的报告会覆盖）
+    body:
+      application/json:
+        schema: |
+          {
+            "student_id"      :1434323,
+            "experiment_id"   :1,
+            "report"          :{
+
+            }
+          }
+    responses:
+      200:
+        body:
+          application/json:
+            schema: |
+              {
+                "code":"200",
+                "data":""
+              }
+  /{student_id}/{experiment_id}:
+    get:
+      description: 获取实验报告（对于已经提交的报告返回的报告带评分）
+      body:
+        application/json:
+          schema: |
+            {}
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{
+                    "report":{},
+                    "status":"uncommitted | committed"
+                  }
+                }
+  /template/{experiment_id}:
+    get:
+      description: 获取实验报告模板
+      body:
+        application/json:
+          schema: |
+            {}
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{}
+                }
+
+  /answer/{experiment_id}:
+    get:
+      description: 获取正确答案
+      body:
+        application/json:
+          schema: |
+            {}
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{
+                    "example1":{
+                      "type":"fill-in-the-blank",
+                      "answer":10,
+                      "range":0.3
+                    },
+                    "example2":{
+                      "type":"choice",
+                      "answer":"A"
+                    }
+                  }
+                }
+  /submit:
+    post:
+      description: 提交报告并打分（答对为1，答错为0）
+      body:
+        application/json:
+          schema: |
+            {
+              "student_id"      :1434323,
+              "experiment_id"   :1
+            }
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{
+                    "example1":{
+                      "type":"fill-in-the-blank",
+                      "answer":10,
+                      "score":1
+                    },
+                    "example2":{
+                      "type":"choice",
+                      "answer":"A",
+                      "score":0
+                    }
+                  }
+                }
+

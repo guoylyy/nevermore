@@ -12,8 +12,8 @@ flask/bin/pip install flask-wtf==0.8.4
 flask/bin/pip install pytz==2013b
 flask/bin/pip install flask-babel==0.8
 flask/bin/pip install flup
-flask/bin/pip install Flask-PyMongo
+flask/bin/pip install bson
 flask/bin/pip install pymongo
+flask/bin/pip install Flask-PyMongo
 flask/bin/pip install flask-mongoengine
 flask/bin/pip install Flask-DebugToolbar
-flask/bin/pip install bson
