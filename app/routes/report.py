@@ -43,7 +43,7 @@ def save_report():
   form["status"] = "uncommitted"
 
   query_report = mongo.db.reports.find_one(idsDict)
-  if query_report["status"] == "committed":
+  if query_report and query_report["status"] == "committed":
     return jsonify(BaseResult("801","无法修改已经提交的报告").to_dict())
 
   if not query_report:
@@ -57,24 +57,22 @@ def save_report():
   return jsonify(BaseResult("200",form).to_dict())
 
 # 获取实验报告
-@app.route('/report', methods=['GET'])
-def get_report():
-  query = request.args
+@app.route('/report/<student_id>/<class_id>/<experiment_id>', methods=['GET'])
+def get_report(student_id, class_id,experiment_id):
+  query = get_query(student_id,class_id,experiment_id)
 
-  if query.has_key("student_id") and query.has_key("class_id") and query.has_key("experiment_id"):
-    query_dict = query_to_dict(query)
-    query_report = mongo.db.reports.find_one(query_dict)
-    query_report.pop("_id")
+  print query
 
-    if not query_report:
-      return jsonify(BaseResult("404","Not Found").to_dict())
-    return jsonify(BaseResult("200",query_report).to_dict())
+  query_report = mongo.db.reports.find_one(query)
 
-  else:
-    return jsonify(BaseResult("100","输入参数有误").to_dict())
+  if not query_report:
+    return jsonify(BaseResult("404","Not Found").to_dict())
+
+  query_report.pop("_id")
+  return jsonify(BaseResult("200",query_report).to_dict())
 
 # 获取实验报告模板
-@app.route('/report/template/<int:experiment_id>', methods=['GET'])
+@app.route('/report/template/<experiment_id>', methods=['GET'])
 def get_answer(experiment_id):
   result = mongo.db.templates.find_one({"experiment_id":experiment_id})
   if not result:
@@ -82,7 +80,7 @@ def get_answer(experiment_id):
   return jsonify(BaseResult("200",result["template"]).to_dict())
 
 # 获取正确答案
-@app.route('/report/answer/<int:experiment_id>', methods=['GET'])
+@app.route('/report/answer/<experiment_id>', methods=['GET'])
 def get_template(experiment_id):
   token = request.headers.get('token')
   result = mongo.db.tokens.find_one({"experiment_id":experiment_id,"token":token})
@@ -95,45 +93,44 @@ def get_template(experiment_id):
   return jsonify(BaseResult("200",answer["report"]).to_dict())
 
 # 提交实验报告并打分
-@app.route('/report/submit', methods=['POST'])
-def submit_report():
+@app.route('/report/<student_id>/<class_id>/<experiment_id>', methods=['POST'])
+def submit_report(student_id, class_id, experiment_id):
 
-  query = request.args
-  query_dict = query_to_dict(query)
+  query = get_query(student_id,class_id,experiment_id)
 
   #获得有序的report
-  student_report_with_id = mongoClientDB['reports'].find_one(query_dict)
+  student_report_with_id = mongoClientDB['reports'].find_one(query)
   if not student_report_with_id:
     return jsonify(BaseResult("404","Not Found").to_dict())
   if student_report_with_id["status"] == "committed":
     return jsonify(BaseResult("110","无法重复提交实验报告").to_dict())
   student_report = student_report_with_id["report"]
 
-  answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":query_dict["experiment_id"]})
+  answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":query["experiment_id"]})
   if not answer_report_with_id:
     return jsonify(BaseResult("404","Not Found").to_dict())
   answer_report = answer_report_with_id["report"]
 
   graded_report = grade(student_report, answer_report)
 
-  query_dict["report"] = graded_report
-  query_dict["status"] = "committed"
-  query_dict["_id"] = ObjectId(student_report_with_id["_id"])
-  query_dict["token"] = binascii.b2a_base64(os.urandom(24))[:-1]
+  query["report"] = graded_report
+  query["status"] = "committed"
+  query["_id"] = ObjectId(student_report_with_id["_id"])
+  query["token"] = binascii.b2a_base64(os.urandom(24))[:-1]
 
-  mongo.db.reports.save(query_dict)
-  mongo.db.tokens.insert({"experiment_id":query_dict["experiment_id"],"token":query_dict["token"]})
+  mongo.db.reports.save(query)
+  mongo.db.tokens.insert({"experiment_id":query["experiment_id"],"token":query["token"]})
 
-  query_dict.pop("_id")
-  return jsonify(BaseResult("200",query_dict).to_dict())
+  query.pop("_id")
+  return jsonify(BaseResult("200",query).to_dict())
 
-#将query转为dict类型
-def query_to_dict(query):
-  query_dict = {}
-  query_dict["student_id"] = int(query["student_id"])
-  query_dict["class_id"] = int(query["class_id"])
-  query_dict["experiment_id"] = int(query["experiment_id"])
-  return query_dict
+#将student_id, class_id, experiment_id构造为dict类型的query
+def get_query(student_id, class_id, experiment_id):
+  query = {}
+  query["student_id"] = student_id
+  query["class_id"] = class_id
+  query["experiment_id"] = experiment_id
+  return query
 
 #判断当前key是否为新的section
 def isNewSection(key):
