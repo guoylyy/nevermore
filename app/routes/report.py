@@ -119,6 +119,7 @@ def submit_report(student_id, class_id, experiment_id):
 
   #获取有序的学生实验报告
   student_report_with_id = mongoClientDB['reports'].find_one(query)
+
   if not student_report_with_id:
     return jsonify(BaseResult("404","Not Found").to_dict())
   if student_report_with_id["status"] == "committed":
@@ -214,19 +215,20 @@ def grade_all_answers(node, answers, section_score, section_scores, final_score,
         answer = answers.pop()
         #print answer.answer
         if answer.answer_type == 'fill-in-the-blank':
-          print temp_value
+          #print 'fill',temp_value, answer.answer
           lower_bound = answer.answer - answer.answer_range
           upper_bound = answer.answer + answer.answer_range
           #print lower_bound, upper_bound
           if temp_value and lower_bound <= float(temp_value) <= upper_bound:
             node["score"] = answer.score
-            section_correct_count[0] = section_correct_counts[0] +1
+            section_correct_count[0] += 1
           else:
             node["score"] = 0
         else:
+          #print 'choice',temp_value, answer.answer
           if temp_value == answer.answer:
             node["score"] = answer.score
-            section_correct_count[0] = section_correct_counts[0] +1
+            section_correct_count[0] += 1
           else:
             node["score"] = 0
         section_score[0] += node["score"]
@@ -255,7 +257,7 @@ def calculate_total_scores(node, answers, section_total_score, section_total_sco
         section_counts.append(section_count[0])
         section_count = [0]
       if temp_key == 'answer':
-        section_count[0] = section_count[0] + 1
+        section_count[0] += 1
         answer = answers.pop()
         #print answer.answer
         section_total_score[0] += node["score"]
