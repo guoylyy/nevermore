@@ -140,10 +140,10 @@
       .list-group-item:hover {
         background-color: #f5f5f5;
       }
-    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>nevermore API documentation <small>version v1.0</small></h1><p>http://baserurl:5000/</p></div><div class="panel panel-default"><div class="panel-heading"><h3 id="report" class="panel-title">/report</h3></div><div class="panel-body"><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_report"><span class="parent"></span>/report</a> <span class="methods"><a href="#report_post"><span class="badge badge_post">post</span></a> <a href="#report_get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_report" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#report_post'" class="list-group-item"><span class="badge badge_post">post</span><div class="method_description"><p>保存实验报告(相同student_id、class_id和experiment_id的报告会覆盖，提交后的报告无法再保存）</p></div><div class="clearfix"></div></div><div onclick="window.location.href = '#report_get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>获取实验报告（对于已经提交的报告返回带评分）</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="report_post"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_post">post</span> <span class="parent"></span>/report</h4></div><div class="modal-body"><div class="alert alert-info"><p>保存实验报告(相同student_id、class_id和experiment_id的报告会覆盖，提交后的报告无法再保存）</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report_post_request" data-toggle="tab">Request</a></li><li><a href="#report_post_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report_post_request"><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
-  "student_id"      :1434323,
-  "class_id"        :5,
-  "experiment_id"   :1,
+    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>nevermore API documentation <small>version v1.0</small></h1><p>http://baserurl:5000/</p></div><div class="panel panel-default"><div class="panel-heading"><h3 id="report" class="panel-title">/report</h3></div><div class="panel-body"><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_report"><span class="parent"></span>/report</a> <span class="methods"><a href="#report_post"><span class="badge badge_post">post</span></a></span></h4></div><div id="panel_report" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#report_post'" class="list-group-item"><span class="badge badge_post">post</span><div class="method_description"><p>保存实验报告(相同student_id、class_id和experiment_id的报告会覆盖，提交后的报告无法再保存）</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="report_post"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_post">post</span> <span class="parent"></span>/report</h4></div><div class="modal-body"><div class="alert alert-info"><p>保存实验报告(相同student_id、class_id和experiment_id的报告会覆盖，提交后的报告无法再保存）</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report_post_request" data-toggle="tab">Request</a></li><li><a href="#report_post_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report_post_request"><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "student_id"      :"1434323",
+  "class_id"        :"5",
+  "experiment_id"   :"1",
   "report"          :{
 
   }
@@ -152,10 +152,32 @@
   "code":"200",
   "data":""
 }
-</code></pre></div></div></div></div></div></div><div class="modal fade" tabindex="0" id="report_get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent"></span>/report</h4></div><div class="modal-body"><div class="alert alert-info"><p>获取实验报告（对于已经提交的报告返回带评分）</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report_get_request" data-toggle="tab">Request</a></li><li><a href="#report_get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report_get_request"><h3>Query Parameters</h3><ul><li><strong>student_id</strong>: <em>(integer)</em></li><li><strong>class_id</strong>: <em>(integer)</em></li><li><strong>experiment_id</strong>: <em>(integer)</em></li></ul><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{}
-</code></pre></div><div class="tab-pane" id="report_get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+</code></pre></div></div></div></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_report__student_id___class_id___experiment_id_"><span class="parent">/report</span>/{student_id}/{class_id}/{experiment_id}</a> <span class="methods"><a href="#report__student_id___class_id___experiment_id__get"><span class="badge badge_get">get</span></a> <a href="#report__student_id___class_id___experiment_id__post"><span class="badge badge_post">post</span></a></span></h4></div><div id="panel_report__student_id___class_id___experiment_id_" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#report__student_id___class_id___experiment_id__get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>获取实验报告（对于已经提交的报告返回带评分）</p></div><div class="clearfix"></div></div><div onclick="window.location.href = '#report__student_id___class_id___experiment_id__post'" class="list-group-item"><span class="badge badge_post">post</span><div class="method_description"><p>提交报告并打分，返回带token的报告，token用于查询答案</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="report__student_id___class_id___experiment_id__get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent">/report</span>/{student_id}/{class_id}/{experiment_id}</h4></div><div class="modal-body"><div class="alert alert-info"><p>获取实验报告（对于已经提交的报告返回带评分）</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report__student_id___class_id___experiment_id__get_request" data-toggle="tab">Request</a></li><li><a href="#report__student_id___class_id___experiment_id__get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report__student_id___class_id___experiment_id__get_request"><h3>URI Parameters</h3><ul><li><strong>student_id</strong>: <em>required (string)</em></li><li><strong>class_id</strong>: <em>required (string)</em></li><li><strong>experiment_id</strong>: <em>required (string)</em></li></ul><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{}
+</code></pre></div><div class="tab-pane" id="report__student_id___class_id___experiment_id__get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
   "code":"200",
   "data":{
+  }
+}
+</code></pre></div></div></div></div></div></div><div class="modal fade" tabindex="0" id="report__student_id___class_id___experiment_id__post"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_post">post</span> <span class="parent">/report</span>/{student_id}/{class_id}/{experiment_id}</h4></div><div class="modal-body"><div class="alert alert-info"><p>提交报告并打分，返回带token的报告，token用于查询答案</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report__student_id___class_id___experiment_id__post_request" data-toggle="tab">Request</a></li><li><a href="#report__student_id___class_id___experiment_id__post_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report__student_id___class_id___experiment_id__post_request"><h3>URI Parameters</h3><ul><li><strong>student_id</strong>: <em>required (string)</em></li><li><strong>class_id</strong>: <em>required (string)</em></li><li><strong>experiment_id</strong>: <em>required (string)</em></li></ul></div><div class="tab-pane" id="report__student_id___class_id___experiment_id__post_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "code":"200",
+  "data":{
+    "token" : "6n2pStDSBrcIH6MNVjEVsFMK09D0Pgof",
+    "section_total_scores" : [0,0,20,20,20,20,20],
+    "total_score" : 100,
+    "section_scores" : [0,0,2,1,10,8,6],
+    "final_score" : 27,
+    "section_counts" : [0,0,30,11,8,16,6],
+    "section_correct_counts" : [0,0,2,3,1,2,3],
+    "example1":{
+      "type":"fill-in-the-blank",
+      "answer":10,
+      "score":1
+    },
+    "example2":{
+      "type":"choice",
+      "answer":"A",
+      "score":0
+    }
   }
 }
 </code></pre></div></div></div></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_report_template__experiment_id_"><span class="parent">/report</span>/template/{experiment_id}</a> <span class="methods"><a href="#report_template__experiment_id__get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_report_template__experiment_id_" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#report_template__experiment_id__get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>获取实验报告模板</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="report_template__experiment_id__get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent">/report</span>/template/{experiment_id}</h4></div><div class="modal-body"><div class="alert alert-info"><p>获取实验报告模板</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report_template__experiment_id__get_request" data-toggle="tab">Request</a></li><li><a href="#report_template__experiment_id__get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report_template__experiment_id__get_request"><h3>URI Parameters</h3><ul><li><strong>experiment_id</strong>: <em>required (string)</em></li></ul><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{}
@@ -175,24 +197,6 @@
     "example2":{
       "type":"choice",
       "answer":"A"
-    }
-  }
-}
-</code></pre></div></div></div></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_report_submit"><span class="parent">/report</span>/submit</a> <span class="methods"><a href="#report_submit_post"><span class="badge badge_post">post</span></a></span></h4></div><div id="panel_report_submit" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#report_submit_post'" class="list-group-item"><span class="badge badge_post">post</span><div class="method_description"><p>提交报告并打分，返回带token的报告，token用于查询答案</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="report_submit_post"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_post">post</span> <span class="parent">/report</span>/submit</h4></div><div class="modal-body"><div class="alert alert-info"><p>提交报告并打分，返回带token的报告，token用于查询答案</p></div><ul class="nav nav-tabs"><li class="active"><a href="#report_submit_post_request" data-toggle="tab">Request</a></li><li><a href="#report_submit_post_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="report_submit_post_request"><h3>Query Parameters</h3><ul><li><strong>student_id</strong>: <em>(integer)</em></li><li><strong>class_id</strong>: <em>(integer)</em></li><li><strong>experiment_id</strong>: <em>(integer)</em></li></ul></div><div class="tab-pane" id="report_submit_post_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
-  "code":"200",
-  "data":{
-    "token" : "6n2pStDSBrcIH6MNVjEVsFMK09D0Pgof",
-    "section_scores" : [0,0,0,2,1,10,8,6],
-    "total_score" : 27,
-    "example1":{
-      "type":"fill-in-the-blank",
-      "answer":10,
-      "score":1
-    },
-    "example2":{
-      "type":"choice",
-      "answer":"A",
-      "score":0
     }
   }
 }

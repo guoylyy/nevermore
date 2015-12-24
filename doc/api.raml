@@ -11,9 +11,9 @@ protocols: [ HTTP, HTTPS ]
       application/json:
         schema: |
           {
-            "student_id"      :1434323,
-            "class_id"        :5,
-            "experiment_id"   :1,
+            "student_id"      :"1434323",
+            "class_id"        :"5",
+            "experiment_id"   :"1",
             "report"          :{
 
             }
@@ -27,29 +27,52 @@ protocols: [ HTTP, HTTPS ]
                 "code":"200",
                 "data":""
               }
-  get:
-    description: 获取实验报告（对于已经提交的报告返回带评分）
-    queryParameters:
-      student_id:
-        type: integer
-      class_id:
-        type: integer
-      experiment_id:
-        type: integer
-    body:
-      application/json:
-        schema: |
-          {}
-    responses:
-      200:
-        body:
-          application/json:
-            schema: |
-              {
-                "code":"200",
-                "data":{
+  /{student_id}/{class_id}/{experiment_id}:
+    get:
+      description: 获取实验报告（对于已经提交的报告返回带评分）
+      body:
+        application/json:
+          schema: |
+            {}
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{
+                  }
                 }
-              }
+    post:
+      description: 提交报告并打分，返回带token的报告，token用于查询答案
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{
+                    "token" : "6n2pStDSBrcIH6MNVjEVsFMK09D0Pgof",
+                    "section_total_scores" : [0,0,20,20,20,20,20],
+                    "total_score" : 100,
+                    "section_scores" : [0,0,2,1,10,8,6],
+                    "final_score" : 27,
+                    "section_counts" : [0,0,30,11,8,16,6],
+                    "section_correct_counts" : [0,0,2,3,1,2,3],
+                    "example1":{
+                      "type":"fill-in-the-blank",
+                      "answer":10,
+                      "score":1
+                    },
+                    "example2":{
+                      "type":"choice",
+                      "answer":"A",
+                      "score":0
+                    }
+                  }
+                }
 
   /template/{experiment_id}:
     get:
@@ -95,39 +118,6 @@ protocols: [ HTTP, HTTPS ]
                     "example2":{
                       "type":"choice",
                       "answer":"A"
-                    }
-                  }
-                }
-  /submit:
-    post:
-      description: 提交报告并打分，返回带token的报告，token用于查询答案
-      queryParameters:
-        student_id:
-          type: integer
-        class_id:
-          type: integer
-        experiment_id:
-          type: integer
-      responses:
-        200:
-          body:
-            application/json:
-              schema: |
-                {
-                  "code":"200",
-                  "data":{
-                    "token" : "6n2pStDSBrcIH6MNVjEVsFMK09D0Pgof",
-                    "section_scores" : [0,0,0,2,1,10,8,6],
-                    "total_score" : 27,
-                    "example1":{
-                      "type":"fill-in-the-blank",
-                      "answer":10,
-                      "score":1
-                    },
-                    "example2":{
-                      "type":"choice",
-                      "answer":"A",
-                      "score":0
                     }
                   }
                 }
