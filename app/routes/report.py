@@ -46,6 +46,7 @@ def save_report():
 
   if query_report:
     form["_id"] = query_report["_id"]
+
   mongo.db.reports.save(form)
 
   form.pop("_id")
@@ -115,9 +116,8 @@ def get_template(experiment_id):
 @app.route('/report/<student_id>/<class_id>/<experiment_id>', methods=['POST'])
 def submit_report(student_id, class_id, experiment_id):
 
-  query = get_query(student_id,class_id,experiment_id)
-
   #获取有序的学生实验报告
+  query = get_query(student_id,class_id,experiment_id)
   student_report_with_id = mongoClientDB['reports'].find_one(query)
 
   if not student_report_with_id:
@@ -133,10 +133,7 @@ def submit_report(student_id, class_id, experiment_id):
     return jsonify(BaseResult("404","Not Found").to_dict())
   answer_report = answer_report_with_id["report"]
 
-  #打分
-  graded_report = grade(student_report, answer_report)
-
-  query["report"] = graded_report
+  query["report"] = grade(student_report, answer_report)
   query["status"] = "committed"
   query["_id"] = student_report_with_id["_id"]
   query["token"] = binascii.b2a_base64(os.urandom(24))[:-1]
@@ -184,11 +181,6 @@ def grade(student_report, answer_report):
   final_score = [0]
   grade_all_answers(student_report, answers, section_score, section_scores, final_score, section_correct_count, section_correct_counts)
 
-  section_scores.pop(0)
-  section_total_scores.pop(0)
-  section_counts.pop(0)
-  section_correct_counts.pop(0)
-
   student_report["section_total_scores"] = section_total_scores
   student_report["total_score"] = total_score[0]
   student_report["section_scores"] = section_scores
@@ -205,7 +197,7 @@ def grade_all_answers(node, answers, section_score, section_scores, final_score,
       temp_key = node.keys()[x]
       temp_value = node[temp_key]
       #print temp_key
-      if is_new_section(temp_key):
+      if is_new_section(temp_key) and temp_key[0] != "1":
         section_scores.append(section_score[0])
         final_score[0] += section_score[0]
         section_score = [0]
@@ -219,14 +211,14 @@ def grade_all_answers(node, answers, section_score, section_scores, final_score,
           lower_bound = answer.answer - answer.answer_range
           upper_bound = answer.answer + answer.answer_range
           #print lower_bound, upper_bound
-          if temp_value and lower_bound <= float(temp_value) <= upper_bound:
+          if temp_value and str(temp_value).isdigit() and lower_bound <= float(temp_value) <= upper_bound:
             node["score"] = answer.score
             section_correct_count[0] += 1
           else:
             node["score"] = 0
         else:
           #print 'choice',temp_value, answer.answer
-          if temp_value == answer.answer:
+          if temp_value == answer.answer: 
             node["score"] = answer.score
             section_correct_count[0] += 1
           else:
@@ -250,7 +242,7 @@ def calculate_total_scores(node, answers, section_total_score, section_total_sco
       temp_key = node.keys()[x]
       temp_value = node[temp_key]
       #print temp_key
-      if is_new_section(temp_key):
+      if is_new_section(temp_key) and temp_key[0] != "1":
         section_total_scores.append(section_total_score[0])
         total_score[0] += section_total_score[0]
         section_total_score = [0]
