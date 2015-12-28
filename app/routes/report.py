@@ -35,7 +35,6 @@ class Answer:
 @app.route('/report', methods=['POST'])
 def save_report():
   form = json.loads(request.data,object_pairs_hook=OrderedDict)
-  form["status"] = "uncommitted"
 
   ids_dict = copy.copy(form)
   ids_dict.pop("report")
@@ -46,6 +45,8 @@ def save_report():
 
   if query_report:
     form["_id"] = query_report["_id"]
+  else:
+    form["status"] = "uncommitted"
 
   mongo.db.reports.save(form)
 
