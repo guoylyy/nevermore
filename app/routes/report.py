@@ -5,7 +5,7 @@ from flask import jsonify, request
 from bson.objectid import ObjectId
 from collections import OrderedDict
 from bson import json_util
-import json,copy,binascii,os
+import json,copy,binascii,os,re
 
 class BaseResult:
   def __init__(self, code, data):
@@ -30,6 +30,43 @@ class Answer:
         answer_range = self.answer_range,
         score = self.score
       )
+
+# 全局变量
+  global section_total_score
+  global section_total_scores
+  global section_count
+  global section_counts
+  global total_score
+
+  global section_score
+  global section_scores
+  global section_correct_count
+  global section_correct_counts
+  global final_score
+
+# --插入实验报告模板
+@app.route('/report/template/<experiment_id>', methods=['POST'])
+def add_template(experiment_id):
+  result = mongo.db.templates.find_one({"experiment_id":experiment_id})
+  form = json.loads(request.data, object_pairs_hook=OrderedDict)
+  if not result:
+    form['experiment_id'] = experiment_id
+  else:
+    form['_id'] = result['_id']
+  mongo.db.templates.save(form)
+  return json_util.dumps(form)
+
+# --插入答案
+@app.route('/report/answer/<experiment_id>', methods=['POST'])
+def add_answer(experiment_id):
+  result = mongo.db.answers.find_one({"experiment_id":experiment_id})
+  form = json.loads(request.data, object_pairs_hook=OrderedDict)
+  if not result:
+    form['experiment_id'] = experiment_id
+  else:
+    form['_id'] = result['_id']
+  mongo.db.answers.save(form)
+  return json_util.dumps(form)
 
 # 保存实验报告
 @app.route('/report', methods=['POST'])
@@ -65,18 +102,6 @@ def get_report(student_id, class_id,experiment_id):
   query_report.pop("_id")
   return jsonify(BaseResult("200",query_report).to_dict())
 
-# --插入实验报告模板
-@app.route('/report/template/<experiment_id>', methods=['POST'])
-def add_template(experiment_id):
-  result = mongo.db.templates.find_one({"experiment_id":experiment_id})
-  form = json.loads(request.data, object_pairs_hook=OrderedDict)
-  if not result:
-    form['experiment_id'] = experiment_id
-  else:
-    form['_id'] = result['_id']
-  mongo.db.templates.save(form)
-  return json_util.dumps(form)
-
 # 获取实验报告模板
 @app.route('/report/template/<experiment_id>', methods=['GET'])
 def get_answer(experiment_id):
@@ -84,18 +109,6 @@ def get_answer(experiment_id):
   if not result:
     return jsonify(BaseResult("404","Not Found").to_dict())
   return jsonify(BaseResult("200",result["template"]).to_dict())
-
-# --插入答案
-@app.route('/report/answer/<experiment_id>', methods=['POST'])
-def add_answer(experiment_id):
-  result = mongo.db.answers.find_one({"experiment_id":experiment_id})
-  form = json.loads(request.data, object_pairs_hook=OrderedDict)
-  if not result:
-    form['experiment_id'] = experiment_id
-  else:
-    form['_id'] = result['_id']
-  mongo.db.answers.save(form)
-  return json_util.dumps(form)
 
 # 获取正确答案
 @app.route('/report/answer/<experiment_id>', methods=['GET'])
@@ -154,12 +167,6 @@ def get_query(student_id, class_id, experiment_id):
   query["experiment_id"] = experiment_id
   return query
 
-#判断当前key是否为新的section
-def is_new_section(key):
-  if key[0].isdigit() and not(key[2].isdigit()):
-    return True
-  return False
-
 # 根据answer_report批改student_report
 def grade(student_report, answer_report):
   answers = []
@@ -167,20 +174,38 @@ def grade(student_report, answer_report):
   answers.reverse()
   answers_bak = copy.copy(answers)
 
+  global section_total_score
   section_total_score = [0]
+  global section_total_scores
   section_total_scores = []
+  global section_count
   section_count = [0]
+  global section_counts
   section_counts = []
+  global total_score
   total_score = [0]
-  calculate_total_scores(answer_report, answers, section_total_score, section_total_scores, total_score, section_count, section_counts)
 
-  answers = answers_bak
+  calculate_total_scores(answer_report, answers)
+
+  global section_score
   section_score = [0]
+  global section_scores
   section_scores = []
+  global section_correct_count
   section_correct_count = [0]
+  global section_correct_counts
   section_correct_counts = []
+  global final_score
+  
   final_score = [0]
-  grade_all_answers(student_report, answers, section_score, section_scores, final_score, section_correct_count, section_correct_counts)
+  answers = answers_bak
+  grade_all_answers(student_report, answers)
+
+  # 去除第一次遇到section时所添加的数据，第二次遇到section时获取的才是第一个section需要的数据
+  section_total_scores.remove(0)
+  section_scores.remove(0)
+  section_counts.remove(0)
+  section_correct_counts.remove(0)
 
   student_report["section_total_scores"] = section_total_scores
   student_report["total_score"] = total_score[0]
@@ -192,13 +217,20 @@ def grade(student_report, answer_report):
   return student_report
 
 # 根据顺序的answers批改student_report
-def grade_all_answers(node, answers, section_score, section_scores, final_score, section_correct_count, section_correct_counts):
+def grade_all_answers(node, answers):
+  global section_score
+  global section_scores
+  global section_correct_count
+  global section_correct_counts
+  global final_score
   if isinstance(node, dict) :
     for x in range(len(node)):
       temp_key = node.keys()[x]
       temp_value = node[temp_key]
       #print temp_key
-      if is_new_section(temp_key) and temp_key[0] != "1":
+      if temp_key == 'type' and temp_value == 'section':
+        #print node["text"]
+        #print "new",section_score,section_correct_count
         section_scores.append(section_score[0])
         final_score[0] += section_score[0]
         section_score = [0]
@@ -208,11 +240,14 @@ def grade_all_answers(node, answers, section_score, section_scores, final_score,
         answer = answers.pop()
         #print answer.answer
         if answer.answer_type == 'fill-in-the-blank':
-          #print 'fill',temp_value, answer.answer
+          #print 'fill',temp_value, answer.answer, answer.answer_range
           lower_bound = answer.answer - answer.answer_range
           upper_bound = answer.answer + answer.answer_range
-          #print lower_bound, upper_bound
-          if temp_value and str(temp_value).isdigit() and lower_bound <= float(temp_value) <= upper_bound:
+          try:
+            temp_value_float = float(temp_value)
+          except ValueError:
+            print "Not a number!"
+          if temp_value and lower_bound <= temp_value_float <= upper_bound:
             node["score"] = answer.score
             section_correct_count[0] += 1
           else:
@@ -231,19 +266,23 @@ def grade_all_answers(node, answers, section_score, section_scores, final_score,
           section_score = [0]
           section_correct_counts.append(section_correct_count[0])
           section_correct_count[0] = 0
-      grade_all_answers(temp_value, answers, section_score, section_scores, final_score, section_correct_count, section_correct_counts)
+      grade_all_answers(temp_value, answers)
   if isinstance(node, list) :
     for x in node:
-      grade_all_answers(x, answers, section_score, section_scores, final_score, section_correct_count, section_correct_counts)
+      grade_all_answers(x, answers)
 
 # 计算每部分分数和总分
-def calculate_total_scores(node, answers, section_total_score, section_total_scores, total_score, section_count, section_counts):
+def calculate_total_scores(node, answers):
+  global section_total_score
+  global section_total_scores
+  global section_count
+  global section_counts
+  global total_score
   if isinstance(node, dict) :
     for x in range(len(node)):
       temp_key = node.keys()[x]
       temp_value = node[temp_key]
-      #print temp_key
-      if is_new_section(temp_key) and temp_key[0] != "1":
+      if temp_key == 'type' and temp_value == 'section':
         section_total_scores.append(section_total_score[0])
         total_score[0] += section_total_score[0]
         section_total_score = [0]
@@ -252,20 +291,21 @@ def calculate_total_scores(node, answers, section_total_score, section_total_sco
       if temp_key == 'answer':
         section_count[0] += 1
         answer = answers.pop()
-        #print answer.answer
-        section_total_score[0] += node["score"]
+        #print answer.answer,answer.score
+        section_total_score[0] += answer.score
+        #print section_count,section_total_score
         if len(answers) ==0:
           section_total_scores.append(section_total_score[0])
           total_score[0] += section_total_score[0]
           section_total_score = [0]
           section_counts.append(section_count[0])
           section_count = [0]
-      calculate_total_scores(temp_value, answers, section_total_score, section_total_scores, total_score, section_count, section_counts)
+      calculate_total_scores(temp_value, answers)
   if isinstance(node, list) :
     for x in node:
-      calculate_total_scores(x, answers, section_total_score, section_total_scores, total_score, section_count, section_counts)
+      calculate_total_scores(x, answers)
 
-# 将answer_report中的所有answer按顺序存入answers, 并计算section_total_scores
+# 将answer_report中的所有answer按顺序存入answers
 def find_all_answers(node, answers):
   if isinstance(node, dict) :
     for x in range(len(node)):
