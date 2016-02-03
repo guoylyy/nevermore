@@ -68,6 +68,13 @@ def add_answer(experiment_id):
   mongo.db.answers.save(form)
   return json_util.dumps(form)
 
+# --清空report和token
+@app.route('/report/clear', methods=['DELETE'])
+def clear():
+  mongo.db.reports.remove()
+  mongo.db.tokens.remove()
+  return jsonify(BaseResult("200","删除成功！").to_dict())
+
 # 保存实验报告
 @app.route('/report', methods=['POST'])
 def save_report():
