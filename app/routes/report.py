@@ -120,14 +120,14 @@ def get_answer(experiment_id):
 # 获取正确答案
 @app.route('/report/answer/<experiment_id>', methods=['GET'])
 def get_template(experiment_id):
-  answer = mongo.db.answers.find_one({"experiment_id":"1"})
-  #answer = mongo.db.answers.find_one({"experiment_id":experiment_id})
+  #answer = mongo.db.answers.find_one({"experiment_id":"1"})
+  answer = mongo.db.answers.find_one({"experiment_id":experiment_id})
   if not answer:
     return jsonify(BaseResult("404","Not Found").to_dict())
 
   token = request.headers.get('token')
-  #result = mongo.db.tokens.find_one({"experiment_id":experiment_id,"token":token})
-  result = mongo.db.tokens.find_one({"experiment_id":"1","token":token})
+  result = mongo.db.tokens.find_one({"experiment_id":experiment_id,"token":token})
+  #result = mongo.db.tokens.find_one({"experiment_id":"1","token":token})
   if not result:
     return jsonify(BaseResult("501","没有权限获取答案").to_dict())
 
@@ -148,8 +148,8 @@ def submit_report(student_id, class_id, experiment_id):
   student_report = student_report_with_id["report"]
   
   #获取有序的实验报告答案
-  answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":"1"})
-  #answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":query["experiment_id"]})
+  #answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":"1"})
+  answer_report_with_id = mongoClientDB['answers'].find_one({"experiment_id":query["experiment_id"]})
   if not answer_report_with_id:
     return jsonify(BaseResult("404","Not Found").to_dict())
   answer_report = answer_report_with_id["report"]
@@ -160,8 +160,8 @@ def submit_report(student_id, class_id, experiment_id):
   query["token"] = binascii.b2a_base64(os.urandom(24))[:-1]
 
   mongo.db.reports.save(query)
-  #mongo.db.tokens.insert({"experiment_id":query["experiment_id"],"token":query["token"]})
-  mongo.db.tokens.insert({"experiment_id":"1","token":query["token"]})
+  mongo.db.tokens.insert({"experiment_id":query["experiment_id"],"token":query["token"]})
+  #mongo.db.tokens.insert({"experiment_id":"1","token":query["token"]})
 
   query.pop("_id")
   return jsonify(BaseResult("200",query).to_dict())
@@ -248,13 +248,22 @@ def grade_all_answers(node, answers):
         #print answer.answer
         if answer.answer_type == 'fill-in-the-blank':
           #print 'fill',temp_value, answer.answer, answer.answer_range
-          lower_bound = answer.answer - answer.answer_range
-          upper_bound = answer.answer + answer.answer_range
+          if str(answer.answer_range)[len(str(answer.answer_range))-1] == '%':
+            if(answer.answer >=0):
+              lower_bound = answer.answer - answer.answer * float(answer.answer_range.replace('%','')) * 0.01
+              upper_bound = answer.answer + answer.answer * float(answer.answer_range.replace('%','')) * 0.01
+            else:
+              lower_bound = answer.answer + answer.answer * float(answer.answer_range.replace('%','')) * 0.01
+              upper_bound = answer.answer - answer.answer * float(answer.answer_range.replace('%','')) * 0.01
+          else:
+            lower_bound = answer.answer - answer.answer_range
+            upper_bound = answer.answer + answer.answer_range
           try:
             temp_value_float = float(temp_value)
           except ValueError:
             print "Not a number!"
-          if temp_value and lower_bound <= temp_value_float <= upper_bound:
+          #if temp_value and lower_bound <= temp_value_float <= upper_bound:
+          if lower_bound <= temp_value_float <= upper_bound:
             node["score"] = answer.score
             section_correct_count[0] += 1
           else:
