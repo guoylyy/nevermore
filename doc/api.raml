@@ -121,4 +121,30 @@ protocols: [ HTTP, HTTPS ]
                     }
                   }
                 }
-
+    post:
+      description: 提交或更改数据库中的答案
+      body:
+        application/json:
+          schema: |
+            {
+              "data":{
+                "example1":{
+                  "type":"fill-in-the-blank",
+                  "answer":10,
+                  "range":0.3
+                },
+                "example2":{
+                  "type":"choice",
+                  "answer":"A"
+                }
+              }
+            }
+      responses:
+        200:
+          body:
+            application/json:
+              schema: |
+                {
+                  "code":"200",
+                  "data":{}
+                }
