@@ -89,6 +89,7 @@ def save_report():
 
   if query_report:
     form["_id"] = query_report["_id"]
+    form["status"] = "uncommitted"
   else:
     form["status"] = "uncommitted"
 
@@ -258,14 +259,19 @@ def grade_all_answers(node, answers):
           else:
             lower_bound = answer.answer - answer.answer_range
             upper_bound = answer.answer + answer.answer_range
-          try:
-            temp_value_float = float(temp_value)
-          except ValueError:
-            print "Not a number!"
-          #if temp_value and lower_bound <= temp_value_float <= upper_bound:
-          if lower_bound <= temp_value_float <= upper_bound:
-            node["score"] = answer.score
-            section_correct_count[0] += 1
+          if temp_value:
+            try:
+              print temp_value
+              temp_value_float = float(temp_value)
+              #if temp_value and lower_bound <= temp_value_float <= upper_bound:
+              if lower_bound <= temp_value_float <= upper_bound:
+                node["score"] = answer.score
+                section_correct_count[0] += 1
+              else:
+                node["score"] = 0
+            except ValueError:
+              print "Not a number!"
+              node["score"] = 0
           else:
             node["score"] = 0
         else:
