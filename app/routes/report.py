@@ -209,11 +209,12 @@ def grade(student_report, answer_report):
   answers = answers_bak
   grade_all_answers(student_report, answers)
 
-  # 去除第一次遇到section时所添加的数据，第二次遇到section时获取的才是第一个section需要的数据
-  section_total_scores.remove(0)
-  section_scores.remove(0)
-  section_counts.remove(0)
-  section_correct_counts.remove(0)
+  # 由于index0位置的type是date而非section，注掉以下代码恰好可以保证section数组位置与content数组位置的对应
+  # # 去除第一次遇到section时所添加的数据，第二次遇到section时获取的才是第一个section需要的数据
+  #section_total_scores.remove(0)
+  #section_scores.remove(0)
+  #section_counts.remove(0)
+  #section_correct_counts.remove(0)
 
   student_report["section_total_scores"] = section_total_scores
   student_report["total_score"] = total_score[0]
@@ -261,7 +262,7 @@ def grade_all_answers(node, answers):
             upper_bound = answer.answer + answer.answer_range
           if temp_value:
             try:
-              print temp_value
+              #print temp_value
               temp_value_float = float(temp_value)
               #if temp_value and lower_bound <= temp_value_float <= upper_bound:
               if lower_bound <= temp_value_float <= upper_bound:
