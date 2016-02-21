@@ -75,6 +75,18 @@ def clear():
   mongo.db.tokens.remove()
   return jsonify(BaseResult("200","删除成功！").to_dict())
 
+# --删除template
+@app.route('/report/template/<experiment_id>', methods=['DELETE'])
+def delete_template(experiment_id):
+  mongo.db.templates.remove({"experiment_id":experiment_id})
+  return jsonify(BaseResult("200","删除成功！").to_dict())
+
+# --删除answer
+@app.route('/report/answer/<experiment_id>', methods=['DELETE'])
+def delete_answer(experiment_id):
+  mongo.db.answers.remove({"experiment_id":experiment_id})
+  return jsonify(BaseResult("200","删除成功！").to_dict())
+
 # 保存实验报告
 @app.route('/report', methods=['POST'])
 def save_report():
@@ -216,6 +228,10 @@ def grade(student_report, answer_report):
   #section_counts.remove(0)
   #section_correct_counts.remove(0)
 
+  #由于answer没有经过网络传输，section关键字是出现在每节开端的，而report经过网络传输后，section关键字变换到了每节末尾，故做此处理
+  section_scores.insert(0,0)
+  section_correct_counts.insert(0,0)
+
   student_report["section_total_scores"] = section_total_scores
   student_report["total_score"] = total_score[0]
   student_report["section_scores"] = section_scores
@@ -283,12 +299,12 @@ def grade_all_answers(node, answers):
           else:
             node["score"] = 0
         section_score[0] += node["score"]
-        if len(answers) ==0:
-          section_scores.append(section_score[0])
-          final_score[0] += section_score[0]
-          section_score = [0]
-          section_correct_counts.append(section_correct_count[0])
-          section_correct_count[0] = 0
+        # if len(answers) ==0:
+        #   section_scores.append(section_score[0])
+        #   final_score[0] += section_score[0]
+        #   section_score = [0]
+        #   section_correct_counts.append(section_correct_count[0])
+        #   section_correct_count[0] = 0
       grade_all_answers(temp_value, answers)
   if isinstance(node, list) :
     for x in node:
